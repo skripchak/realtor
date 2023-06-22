@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:Lm1z~Fv~@localhost:5432/real_estate"
+}
+
+// DBO
+
+model user {
+  user_id        Int              @id @unique @default(autoincrement())
+  first_name     String?          @db.VarChar(45)
+  second_name    String?          @db.VarChar(45)
+  father_name    String?          @db.VarChar(45)
+  email          String?          @unique @db.VarChar(70)
+  phone_number   String?          @db.VarChar(13)
+  reg_date       DateTime?        @default(now()) @db.Timestamp(6)
+  role           String           @db.VarChar(20) // user, realtor, admin
+  password       String           @db.VarChar(256)
+  likedpremisses likedpremisses[]
+  media          media[]
+  review         review[]
+}
+
+model likedpremisses {
+  liked_premisses_id Int        @id @unique @default(autoincrement())
+  premisses_id       Int?
+  user_id            Int?
+  is_viewed          Boolean?
+  liked_date         DateTime?  @default(now()) @db.Timestamp(6)
+  premisses          premisses? @relation(fields: [premisses_id], references: [premisses_id], onDelete: Cascade)
+  user               user?      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model media {
+  media_id       Int             @id @unique @default(autoincrement())
+  file_name      String          @db.VarChar(255)
+  file_name_orig String          @db.VarChar(255) @default("None")
+  premisses_id   Int?            @db.Integer
+  realtor_id     Int?            @db.Integer
+  user_id        Int?            @db.Integer
+  premisses      premisses?      @relation(fields: [premisses_id], references: [premisses_id], onDelete: NoAction)
+  realtor        realtor?        @relation(fields: [realtor_id], references: [realtor_id], onDelete: Cascade)
+  user           user?           @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  premissestype  premissestype[]
+}
+
+model premisses {
+  premisses_id      Int              @id @unique @default(autoincrement())
+  premisses_type_id Int
+  realtor_id        Int
+  name              String           @db.VarChar(45)
+  renttype          String           @db.VarChar(45)
+  description       String           @db.VarChar(4096)
+  address           String           @db.VarChar(100)
+  room_number       Int              @db.SmallInt
+  floor             Int?             @db.SmallInt
+  square            Float
+  area_description  String           @db.VarChar(2046)
+  posting_date      DateTime         @default(now()) @db.Timestamp(6)
+  price             Float
+  isposted          Boolean?
+  available         Boolean?
+  is_verificated    Boolean?
+  likedpremisses    likedpremisses[]
+  media             media[]
+  premissestype     premissestype    @relation(fields: [premisses_type_id], references: [premisses_type_id], onDelete: Cascade)
+  realtor           realtor          @relation(fields: [realtor_id], references: [realtor_id], onDelete: Cascade)
+}
+
+model premissestype {
+  premisses_type_id Int         @id @unique @default(autoincrement())
+  name              String?     @unique @db.VarChar(45)
+  description       String?     @db.VarChar(1024)
+  media_id          Int?
+  premisses         premisses[]
+  media             media?      @relation(fields: [media_id], references: [media_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model realtor {
+  realtor_id   Int         @id @unique @default(autoincrement())
+  name         String      @unique @db.VarChar(256)
+  location     String      @db.VarChar(1000)
+  phone_number String      @unique @db.VarChar(13)
+  media        media[]
+  premisses    premisses[]
+  review       review[]
+}
+
+model review {
+  review_id     Int      @id @unique @default(autoincrement())
+  realtor_id    Int?
+  father_id     Int?
+  user_id       Int?
+  advanteges    String?  @db.VarChar(300)
+  disadvantages String?  @db.VarChar(300)
+  body          String?  @db.VarChar(1044)
+  rate          Int?     @db.SmallInt
+  review        review?  @relation("reviewToreview", fields: [father_id], references: [review_id], onDelete: Cascade)
+  other_review  review[] @relation("reviewToreview")
+  realtor       realtor? @relation(fields: [realtor_id], references: [realtor_id], onDelete: Cascade)
+  user          user?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+// VIEWS
+//
+// model PremissesShortView {
+//   premisses_id      Int    @unique
+//   premisses_type_id Int
+//   media             Bytes?
+//   price             Int
+//   name              String
+//   renttype          String
+//   address           String
+// }
+//
+// model PremissesDetailView {
+//   premisses_id           Int      @unique
+//   premisses_type_name    String
+//   name                   String
+//   renttype               String
+//   realtor_id             Int
+//   realtor_first_name     String
+//   realtor_second_name    String
+//   realtor_phone_number   String
+//   realtor_email          String
+//   realtor_rate_number    Int
+//   realtor_rate_by_review Int
+//   realtor_reg_date       DateTime
+//   description            String
+//   address                String
+//   room_number            Int
+//   floor                  Int
+//   square                 Float
+//   area_description       String
+//   posting_date           DateTime
+//   price                  Float
+// }
